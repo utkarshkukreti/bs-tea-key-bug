@@ -1,25 +1,31 @@
 open Tea.App
 open Tea.Html
 
-type model = {counter: int}
+type counter = {id: int; value: int}
 
-let init () = {counter= 0}
+type model = counter list
 
-type msg = Increment | Decrement | Reset
+let init () = [{id= 0; value= 0}; {id= 1; value= 1}; {id= 2; value= 2}]
+
+type msg = Increment of int
 
 let update model = function
-  | Increment -> {counter= model.counter + 1}
-  | Decrement -> {counter= model.counter - 1}
-  | Reset -> {counter= 0}
+  | Increment id ->
+      Belt.List.map model (fun counter ->
+          if counter.id = id then {counter with value= counter.value + 1}
+          else counter )
 
 
 let view model =
-  div
-    [styles [("text-align", "center")]]
-    [ div [] [text (string_of_int model.counter)]
-    ; button [onClick Increment] [text "Increment"]
-    ; button [onClick Decrement] [text "Decrement"]
-    ; button [onClick Reset] [text "Reset"] ]
+  let () =
+    Belt.List.map model (fun counter -> counter.value) |> Belt.List.toArray
+    |> Js.log
+  in
+  div []
+    (Belt.List.map model (fun counter ->
+         div ~key:(string_of_int counter.id) []
+           [ span [] [text (" " ^ string_of_int counter.value ^ " ")]
+           ; button [onClick (Increment counter.id)] [text "+"] ] ))
 
 
 let main = beginnerProgram {model= init (); update; view}
