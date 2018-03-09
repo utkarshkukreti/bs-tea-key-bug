@@ -1,31 +1,31 @@
 open Tea.App
 open Tea.Html
 
-type counter = {id: int; value: int}
+type model = {order: bool; username: string; password: string}
 
-type model = counter list
+let init () = {order= true; username= "foo"; password= "bar"}
 
-let init () = [{id= 0; value= 0}; {id= 1; value= 1}; {id= 2; value= 2}]
-
-type msg = Increment of int
+type msg = Swap | Username of string | Password of string
 
 let update model = function
-  | Increment id ->
-      Belt.List.map model (fun counter ->
-          if counter.id = id then {counter with value= counter.value + 1}
-          else counter )
+  | Swap -> {model with order= not model.order}
+  | Username username -> {model with username}
+  | Password password -> {model with password}
 
 
 let view model =
-  let () =
-    Belt.List.map model (fun counter -> counter.value) |> Belt.List.toArray
-    |> Js.log
+  let a =
+    div ~key:"username" []
+      [input' [onInput (fun s -> Username s)] []; text model.username]
+  in
+  let b =
+    div ~key:"password" []
+      [ input' [type' "password"; onInput (fun s -> Password s)] []
+      ; text model.password ]
   in
   div []
-    (Belt.List.map model (fun counter ->
-         div ~key:(string_of_int counter.id) []
-           [ span [] [text (" " ^ string_of_int counter.value ^ " ")]
-           ; button [onClick (Increment counter.id)] [text "+"] ] ))
+    [ div [] (if model.order then [a; b] else [b; a])
+    ; button [onClick Swap] [text "Swap"] ]
 
 
 let main = beginnerProgram {model= init (); update; view}
